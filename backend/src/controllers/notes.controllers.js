@@ -1,6 +1,10 @@
 //models
 import Note from "../models/notes.js";
 
+//plugin
+import { obtenerMoment } from "../plugin/moment.js";
+
+
 export const saveNotes = async (req, res) => {
     try {
         const newNote = new Note({ ...req.body });
@@ -22,7 +26,7 @@ export const findNotes = async (req, res) => {
         
         const formattedNotes = notes.map(note => ({
             ...note._doc,
-            date: note.date.toLocaleDateString(),
+            date: (!note.date || note.date === undefined)? obtenerMoment(note.date) : obtenerMoment(new Date()),
         }));
 
         res.status(200).json({

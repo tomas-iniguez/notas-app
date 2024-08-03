@@ -2,7 +2,7 @@
 import User from '../models/users.js';
 
 //middlewares
-import { generarJWT } from '../middlewares/jws.js';
+import { generarJWT } from '../middlewares/jwt.js';
 
 //plugin
 import { generarBcryptjs, verificarBcryptjs } from '../plugin/bcrypt.js';

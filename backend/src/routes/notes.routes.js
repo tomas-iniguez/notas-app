@@ -3,7 +3,7 @@ import { check, param } from 'express-validator';
 
 //middlewares
 import { validarCampos } from '../middlewares/validationResult.js';
-import { validarJWT } from '../middlewares/jws.js';
+import { validarJWT } from '../middlewares/jwt.js';
 
 //controllers
 import { saveNotes, findNotes, updateNotes, deleteNotes } from '../controllers/notes.controllers.js';

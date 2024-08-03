@@ -7,7 +7,11 @@ import { obtenerMoment } from "../plugin/moment.js";
 
 export const saveNotes = async (req, res) => {
     try {
-        const newNote = new Note({ ...req.body });
+        const { uuidId } = req.decoded_token; 
+        const body = req.body;
+        body.userId = uuidId;
+
+        const newNote = new Note(body);
         await newNote.save();
 
        res.status(200).json({
@@ -22,7 +26,10 @@ export const saveNotes = async (req, res) => {
 
 export const findNotes = async (req, res) => {
     try {
-        const notes = await Note.find().select(['_id', 'title', 'content', 'date']).sort({ date: -1 });
+        const { uuidId } = req.decoded_token;
+        const userId = uuidId;
+
+        const notes = await Note.find({ userId }).select(['_id', 'title', 'content', 'date']).sort({ date: -1 });
         
         const formattedNotes = notes.map(note => ({
             ...note._doc,
@@ -42,14 +49,18 @@ export const findNotes = async (req, res) => {
 export const updateNotes = async (req, res) => {
     try {
         const { noteId } = req.params;
+        const body = req.body;
 
         const note = await Note.findById(noteId);
         if(!note) {
-            return  res.status(404).json({ message: 'Nota no encontrada' });
+            return  res.status(404).json({
+                estado: false,
+                msg: `Nota no encontrada`,
+            });
         }
 
         const filter = { '_id': noteId };
-        const update = { $set: { ...req.body } };
+        const update = { $set: body };
 
         await Note.updateOne(filter, update);
         
@@ -69,7 +80,10 @@ export const deleteNotes = async (req, res) => {
 
         const note = await Note.findById(noteId);
         if(!note) {
-            return  res.status(404).json({ message: 'Nota no encontrada' });
+            return  res.status(404).json({
+                estado: false,
+                msg: `Nota no encontrada`,
+            });
         }
 
         await Note.deleteOne({ '_id': noteId });

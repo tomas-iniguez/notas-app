@@ -1,25 +1,24 @@
 
 import { Schema, model } from 'mongoose';
 
-const NoteSchema = Schema({
-    title: {
+const UserSchema = Schema({
+    name: {
         type: String,
         required: true
     },
-    content: {
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    password: {
         type: String,
         required: true
     },
-
-    userId: {
-        type: Schema.Types.ObjectId,
-        required: true
-    },
-
     date: {
         type: Date,
         default: Date.now
     }
 });
 
-export default model('Note', NoteSchema);
+export default model('User', UserSchema);

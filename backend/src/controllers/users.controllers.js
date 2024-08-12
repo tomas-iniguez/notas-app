@@ -1,5 +1,5 @@
-//models
-import User from '../models/users.js';
+//services
+import userServices from '../services/users.services.js';
 
 //middlewares
 import { generarJWT } from '../middlewares/jwt.js';
@@ -11,7 +11,7 @@ export const saveUser = async (req, res) => {
     try {
         const body = req.body;
 
-        const user = await User.findOne({ email: body.email });
+        const user = await userServices.findUserEmailService(body.email);
         if(user) {
             return  res.status(404).json({ 
                 estado: false,
@@ -23,8 +23,7 @@ export const saveUser = async (req, res) => {
 
         body.password = password;
 
-        const newUser = new User(body);
-        await newUser.save();
+        await userServices.saveService(body);
 
         res.status(200).json({
             estado: true,
@@ -32,7 +31,7 @@ export const saveUser = async (req, res) => {
        });  
     } catch (error) {
         console.error('Error saving note:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: error.message });
     }
 }
 
@@ -40,7 +39,7 @@ export const authUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const user = await User.findOne({ email });
+        const user = await userServices.findUserEmailService(email);
         if(!user) {
             return res.status(404).json({
                 estado: false,
@@ -56,10 +55,8 @@ export const authUser = async (req, res) => {
             });
         }
 
-        const uuidId = user._id;
         const name = user.name;
-        
-        const token = await generarJWT({uuidId, name, email});
+        const token = await generarJWT({ name, email });
 
         res.status(200).json({
             estado: true,
@@ -67,6 +64,6 @@ export const authUser = async (req, res) => {
         });
     } catch (error) {
         console.error('Error saving note:', error);
-        res.status(500).json({ message: 'Internal Server Error' }); 
+        res.status(500).json({ message: error.message });
     }
 }

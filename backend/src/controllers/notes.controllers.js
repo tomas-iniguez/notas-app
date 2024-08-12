@@ -1,18 +1,28 @@
-//models
-import Note from "../models/notes.js";
+//services
+import userServices from '../services/users.services.js';
+import noteServices from '../services/notes.services.js';
 
 //plugin
 import { obtenerMoment } from "../plugin/moment.js";
 
 
+
 export const saveNotes = async (req, res) => {
     try {
-        const { uuidId } = req.decoded_token; 
+        const { email } = req.decoded_token; 
         const body = req.body;
-        body.userId = uuidId;
 
-        const newNote = new Note(body);
-        await newNote.save();
+        const user = await userServices.findUserEmailService(email);
+        if(!user) {
+            return res.status(404).json({
+                estado: false,
+                msg: 'No esta registrado el email',
+            });
+        }
+
+        body.userId = user._id;
+
+        await noteServices.saveService(body);
 
        res.status(200).json({
             estado: true,
@@ -20,16 +30,24 @@ export const saveNotes = async (req, res) => {
        }); 
     } catch (error) {
         console.error('Error saving note:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: error.message });
     }
 }
 
 export const findNotes = async (req, res) => {
     try {
-        const { uuidId } = req.decoded_token;
-        const userId = uuidId;
+        const { email } = req.decoded_token;
+        const user = await userServices.findUserEmailService(email)
+        if(!user) {
+            return res.status(404).json({
+                estado: false,
+                msg: 'No esta registrado el email',
+            });
+        }
 
-        const notes = await Note.find({ userId }).select(['_id', 'title', 'content', 'date']).sort({ date: -1 });
+        const attributes = ['_id', 'title', 'content', 'date'];
+        const sort = { date: -1 };
+        const notes = await noteServices.findAllService(user._id, attributes, sort);
         
         const formattedNotes = notes.map(note => ({
             ...note._doc,
@@ -42,7 +60,7 @@ export const findNotes = async (req, res) => {
         });
     } catch (error) {
         console.error('Error saving note:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: error.message });
     }
 }
 
@@ -51,7 +69,7 @@ export const updateNotes = async (req, res) => {
         const { noteId } = req.params;
         const body = req.body;
 
-        const note = await Note.findById(noteId);
+        const note = await noteServices.findByIdService(noteId);
         if(!note) {
             return  res.status(404).json({
                 estado: false,
@@ -59,10 +77,7 @@ export const updateNotes = async (req, res) => {
             });
         }
 
-        const filter = { '_id': noteId };
-        const update = { $set: body };
-
-        await Note.updateOne(filter, update);
+        await noteServices.updateService(noteId, body);
         
         res.status(200).json({
             estado: true,
@@ -70,7 +85,7 @@ export const updateNotes = async (req, res) => {
         });
     } catch (error) {
         console.error('Error saving note:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: error.message });
     }
 }
 
@@ -78,7 +93,7 @@ export const deleteNotes = async (req, res) => {
     try {
         const { noteId } = req.params;
 
-        const note = await Note.findById(noteId);
+        const note = await noteServices.findByIdService(noteId);
         if(!note) {
             return  res.status(404).json({
                 estado: false,
@@ -86,7 +101,7 @@ export const deleteNotes = async (req, res) => {
             });
         }
 
-        await Note.deleteOne({ '_id': noteId });
+        await noteServices.deleteService(noteId);
         
         res.status(200).json({
             estado: true,
@@ -94,6 +109,6 @@ export const deleteNotes = async (req, res) => {
         });
     } catch (error) {
         console.error('Error saving note:', error);
-        res.status(500).json({ message: 'Internal Server Error' });
+        res.status(500).json({ message: error.message });
     }
 }
